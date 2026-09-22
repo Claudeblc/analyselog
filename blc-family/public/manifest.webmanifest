@@ -1,0 +1,10 @@
+{
+  "name": "BLC Family",
+  "short_name": "BLC Family",
+  "description": "La maison numérique privée de la famille",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#140c1a",
+  "theme_color": "#140c1a",
+  "icons": [{ "src": "/img/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
