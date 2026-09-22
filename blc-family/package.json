@@ -2,7 +2,7 @@
   "name": "blc-family",
   "version": "1.0.0",
   "private": true,
-  "description": "BLC Family (Bellegramme Family) — la maison numérique privée de la famille, multi-écrans.",
+  "description": "BLC Family (Belcram Family) — la maison numérique privée de la famille, multi-écrans.",
   "main": "server/index.js",
   "type": "commonjs",
   "scripts": {

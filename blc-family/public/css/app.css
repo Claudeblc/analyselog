@@ -412,7 +412,8 @@ body.watching .call.mini { z-index: 78; }
 .target { padding: 16px; border-radius: 18px; background: var(--glass); border: 1px solid var(--line); cursor: pointer; display: flex; flex-direction: column; gap: 6px; }
 .target.on { border-color: var(--amber); background: rgba(244, 162, 97, .16); }
 .target .ic { font-size: 30px; }
-.intercom-pop { position: fixed; z-index: 96; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, 92vw); padding: 28px; border-radius: 30px; background: rgba(34, 22, 42, .94); border: 1px solid var(--line); box-shadow: var(--shadow); text-align: center; animation: rise .5s var(--ease); }
+.intercom-pop { position: fixed; z-index: 96; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, 92vw); padding: 28px; border-radius: 30px; background: rgba(34, 22, 42, .94); border: 1px solid var(--line); box-shadow: var(--shadow); text-align: center; animation: popIn .5s var(--ease) both; }
+@keyframes popIn { from { opacity: 0; transform: translate(-50%, -44%) scale(.94); } }
 .intercom-pop h3 { font-family: var(--display); font-size: 28px; margin: 12px 0; }
 
 /* ---------------- Capsules temporelles */
@@ -514,3 +515,5 @@ body.k-tv .toolbar .tool:not(.tv-ok) { display: none; }
   .dpad { grid-template-columns: repeat(3, 76px); grid-template-rows: repeat(3, 76px); }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+body.k-tv .pager { display: none; }
+body.k-tv .live-bar { padding: 6px 12px; margin-bottom: 8px; }

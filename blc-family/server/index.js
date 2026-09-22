@@ -59,7 +59,9 @@ function setCookie(req, res, value, maxAge = 365 * 86400) {
   const secure = req.headers['x-forwarded-proto'] === 'https' || req.socket.encrypted;
   const parts = [`${COOKIE}=${value}`, 'Path=/', 'HttpOnly', 'SameSite=Lax', `Max-Age=${maxAge}`];
   if (secure) parts.push('Secure');
-  if (COOKIE_DOMAIN) parts.push(`Domain=${COOKIE_DOMAIN}`);
+  // Cookie partagé entre sous-domaines (family., galerie., chat., visio.) si l'hôte appartient au domaine configuré
+  const host = String(req.headers.host || '').split(':')[0];
+  if (COOKIE_DOMAIN && ('.' + host).endsWith(COOKIE_DOMAIN.replace(/^\.?/, '.'))) parts.push(`Domain=${COOKIE_DOMAIN}`);
   res.setHeader('Set-Cookie', parts.join('; '));
 }
 
@@ -177,6 +179,7 @@ route('POST', '/api/login', async (req, res) => {
   const a = String(b.pin || ''); const p = String(PIN);
   const same = a.length === p.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(p));
   if (!m || !same) { attempts.get(ip).push(now()); return fail(res, 401, 'Code famille incorrect'); }
+  attempts.delete(ip);
   const t = createSession({ memberId: m.id, deviceName: clip(b.deviceName || 'Appareil', 60), kind: ['phone', 'tablet', 'desktop', 'tv'].includes(b.kind) ? b.kind : 'desktop' });
   setCookie(req, res, t);
   ok(res, { ok: true });
@@ -329,6 +332,7 @@ route('POST', '/api/posts', async (req, res, s) => {
   notify(s.memberId, verbs[type], { kind: 'post', id: p.id, type, mediaUrl: p.mediaUrl });
   ok(res, p);
 });
+route('GET', '/api/posts/:id', async (req, res, s, p) => { const post = db.get('posts', p.id); post ? ok(res, post) : fail(res, 404, 'Introuvable'); });
 route('PATCH', '/api/posts/:id', async (req, res, s, p) => {
   const post = db.get('posts', p.id); if (!post) return fail(res, 404, 'Introuvable');
   if (!s.member) return fail(res, 403, 'Interdit');
