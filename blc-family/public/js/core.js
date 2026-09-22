@@ -196,3 +196,34 @@ export function reactionBar(kind, id, reactions = {}, onChange) {
 
 export const kindIcon = { tv: '📺', phone: '📱', tablet: '📲', desktop: '💻' };
 export function youtubeId(url) { const m = /(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/.exec(url); return m && m[1]; }
+
+// Pastilles de compétences : domaines et mots-clés pour « J'ai besoin d'aide pour… »
+export const DOMAINS = {
+  sante: { icon: '💊', label: 'Santé & pharmacie', color: '#80ed99', words: ['santé', 'sante', 'médicament', 'medicament', 'pharmacie', 'ordonnance', 'malade', 'maladie', 'douleur', 'fièvre', 'vaccin', 'posologie', 'soin', 'médical', 'medical', 'traitement', 'docteur', 'médecin', 'allergie', 'tension'] },
+  info: { icon: '💻', label: 'Informatique', color: '#4cc9f0', words: ['ordinateur', 'pc', 'mac', 'informatique', 'wifi', 'internet', 'site', 'appli', 'application', 'téléphone', 'smartphone', 'bug', 'imprimante', 'mot de passe', 'box', 'code', 'logiciel', 'virus', 'tablette', 'tv', 'télé', 'email', 'mail'] },
+  emploi: { icon: '💼', label: 'Emploi & formation', color: '#f4a261', words: ['emploi', 'travail', 'boulot', 'chômage', 'chomage', 'cv', 'lettre de motivation', 'formation', 'france travail', 'pôle emploi', 'pole emploi', 'reconversion', 'entretien', 'embauche', 'inscription', 'allocation', 'offre', 'stage', 'métier', 'job'] },
+  rh: { icon: '🤝', label: 'RH & droit du travail', color: '#f472b6', words: ['rh', 'contrat', 'fiche de paie', 'bulletin', 'salaire', 'congé', 'conges', 'licenciement', 'démission', 'demission', 'recrutement', 'employeur', 'arrêt maladie', 'mutuelle', 'prud', 'période d’essai', 'rupture', 'heures sup'] },
+  autre: { icon: '⭐', label: 'Autre', color: '#a78bfa', words: [] },
+};
+export function skillPills(memberId, { small = false, max = 6 } = {}) {
+  const m = member(memberId);
+  return h('div.pills' + (small ? '.small' : ''), (m.skills || []).slice(0, max).map((s) => {
+    const d = DOMAINS[s.domain] || DOMAINS.autre;
+    return h('span.pill', { style: { '--pc': d.color }, title: d.label }, d.icon, ' ', s.label);
+  }));
+}
+// Membres capables d'aider pour une demande en texte libre
+export function whoCanHelp(query) {
+  const q = ' ' + query.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') + ' ';
+  const norm = (w) => w.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const scores = state.members.map((m) => {
+    let score = 0;
+    for (const s of m.skills || []) {
+      if (s.label.split(/[\s&,/]+/).some((w) => w.length > 2 && q.includes(norm(w)))) score += 3;
+      for (const w of (DOMAINS[s.domain] || DOMAINS.autre).words) if (q.includes(norm(w))) score += 1;
+    }
+    if (m.job && m.job.split(/[\s&,()]+/).some((w) => w.length > 3 && q.includes(norm(w)))) score += 2;
+    return { m, score };
+  });
+  return scores.filter((x) => x.score > 0).sort((a, b) => b.score - a.score).map((x) => x.m);
+}

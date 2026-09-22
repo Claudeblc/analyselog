@@ -54,6 +54,7 @@ export default async function chat(root) {
     list,
     state.me ? h('div.composer', h('button.icon-btn', { title: 'Photo ou vidéo', onclick: () => file.click() }, '📎'), file, text, mic, h('button.icon-btn', { title: 'Envoyer', onclick: sendText, style: { background: 'linear-gradient(135deg, var(--amber), var(--wine))' } }, '➤')) : h('p.muted', 'Lecture seule sur cet appareil.')));
   paint();
+  try { const d = sessionStorage.getItem('blcf.chatDraft'); if (d) { text.value = d + ' '; sessionStorage.removeItem('blcf.chatDraft'); setTimeout(() => text.focus(), 100); } } catch (_) {}
   const offs = [
     bus.on('ev:msg:new', (m) => { msgs.push(m); const near = list.scrollHeight - list.scrollTop - list.clientHeight < 200; list.append(msgEl(m)); if (near || m.authorId === state.me?.id) list.scrollTop = list.scrollHeight; }),
     bus.on('ev:react', (r) => { if (r.kind !== 'msg') return; const m = msgs.find((x) => x.id === r.id); if (!m) return; m.reactions = r.reactions; list.querySelector(`[data-id="${r.id}"]`)?.replaceWith(msgEl(m)); }),

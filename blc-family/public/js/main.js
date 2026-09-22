@@ -42,6 +42,9 @@ const ROUTES = [
   [/^\/parametres$/, () => import('./views/settings.js')],
   [/^\/pair\/([\w-]+)$/, () => import('./views/pair.js'), ['token']],
   [/^\/remote$/, () => import('./views/remote.js')],
+  [/^\/famille$/, () => import('./views/famille.js')],
+  [/^\/calendrier$/, () => import('./views/calendrier.js')],
+  [/^\/aide$/, () => import('./views/aide.js')],
   [/^\/p\/([\w-]+)$/, () => import('./views/home.js'), ['post']],
 ];
 let cleanup = null;
@@ -70,10 +73,12 @@ export const go = (hash) => { if (location.hash === hash) router(); else locatio
 function renderTopbar(path) {
   const bar = $('#topbar');
   const home = path === '/' || path === '';
+  document.body.classList.toggle('on-home', home);
+  if (home) { bar.replaceChildren(); return; } // l'accueil a son propre en-tête
   const online = [...new Set(state.presence.map((c) => c.memberId).filter(Boolean))];
   bar.replaceChildren(
     home ? null : h('a.icon-btn.back', { href: '#/', 'aria-label': 'Accueil', 'data-focus': '' }, '←'),
-    h('a.brand', { href: '#/' }, h('img', { src: '/img/icon.svg', alt: '' }), h('span', 'BLC Family', h('small', 'Belcram Family'))),
+    h('a.brand', { href: '#/' }, h('span.brand-script', 'Belcram'), h('small', 'Family ♡')),
     h('div.spacer'),
     h('div.presence', { title: 'En ligne' }, online.slice(0, 6).map((id) => avatar(id, 's', true))),
     !isTV && state.me ? h('a.icon-btn', { href: '#/remote', title: 'Télécommande TV', 'aria-label': 'Télécommande TV' }, '🎮') : null,
@@ -223,8 +228,20 @@ function defaultRouteForHost() {
   else if (sub === 'visio' || sub === 'appel') location.hash = '#/appel';
 }
 
+// Décor commun à toutes les pages : scène codée, ou photo de fond choisie par la famille
+async function paintScene() {
+  const { sceneUri } = await import('./art.js');
+  let bg = '';
+  try { bg = (await api('/api/family')).background; } catch (_) {}
+  const el = $('#scene');
+  el.style.backgroundImage = bg ? `url("${bg}")` : `url("${sceneUri()}")`;
+  el.classList.toggle('photo', !!bg);
+}
+bus.on('ev:family', paintScene);
+
 async function boot() {
   defaultRouteForHost();
+  paintScene();
   let me;
   try { me = await api('/api/me'); } catch (e) {
     if (e.status !== 401) { $('#view').append(h('div.glass.card', 'Serveur injoignable. Nouvel essai…')); setTimeout(boot, 4000); return; }

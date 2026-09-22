@@ -20,20 +20,33 @@ const LINKS = {
   tv: process.env.TV_URL || 'https://blctv-player.com',
 };
 
+// Serveurs BLC TV proposés à l'ouverture (noms visibles, liens gardés côté serveur, jamais dans le dépôt).
+// TV_SERVERS="Fox|https://lien-1;BOD TV 4K|https://lien-2"
+const TV_SERVERS = (process.env.TV_SERVERS || '').split(';').map((x) => x.split('|')).filter((x) => x[0] && /^https?:\/\//.test(x[1] || '')).map(([name, url]) => ({ name: name.trim(), url: url.trim() }));
+if (!TV_SERVERS.length) TV_SERVERS.push({ name: 'BLC TV Player', url: LINKS.tv });
+
 if (!FAMILY_PIN) console.warn('[blc-family] FAMILY_PIN non défini : utilisez FAMILY_PIN=xxxx en production. PIN de dev = 0000');
 const PIN = FAMILY_PIN || '0000';
 
 // ---------------------------------------------------------------- membres
+// Pastilles de compétences : « on se tourne vers qui sait » (domaines : sante, info, emploi, rh, autre)
 const DEFAULT_MEMBERS = [
-  { id: 'papa', name: 'Papa', role: 'author', admin: true, color: '#f4a261', emoji: '🍷' },
-  { id: 'claude', name: 'Claude', role: 'reader', admin: true, color: '#4cc9f0', emoji: '🎧' },
-  { id: 'christophe', name: 'Christophe', role: 'reader', admin: false, color: '#80ed99', emoji: '🎸' },
-  { id: 'celia', name: 'Célia', role: 'reader', admin: false, color: '#f472b6', emoji: '🌺' },
+  { id: 'papa', name: 'Papa', role: 'author', admin: true, color: '#f4a261', emoji: '🍷', job: 'Conseiller principal France Travail',
+    skills: [{ label: 'Emploi & reconversion', domain: 'emploi' }, { label: 'CV & entretiens', domain: 'emploi' }, { label: 'Formation', domain: 'emploi' }] },
+  { id: 'claude', name: 'Claude', role: 'reader', admin: true, color: '#4cc9f0', emoji: '🎧', job: 'Développeur & technicien informatique',
+    skills: [{ label: 'Développement', domain: 'info' }, { label: 'Dépannage informatique', domain: 'info' }, { label: 'Sites & applis', domain: 'info' }] },
+  { id: 'christophe', name: 'Christophe', role: 'reader', admin: false, color: '#80ed99', emoji: '🎸', job: 'Préparateur en pharmacie',
+    skills: [{ label: 'Pharmacie', domain: 'sante' }, { label: 'Compétences médicales', domain: 'sante' }, { label: 'Médicaments', domain: 'sante' }] },
+  { id: 'celia', name: 'Célia', role: 'reader', admin: false, color: '#f472b6', emoji: '🌺', job: 'Ressources humaines (RH)',
+    skills: [{ label: 'RH', domain: 'rh' }, { label: 'Contrats & fiches de paie', domain: 'rh' }, { label: 'Recrutement', domain: 'rh' }] },
 ];
 const members = db.list('members');
-if (!members.length) { DEFAULT_MEMBERS.forEach((m) => db.insert('members', { ...m, birthday: '', avatar: '' })); }
+if (!members.length) { DEFAULT_MEMBERS.forEach((m) => db.insert('members', { ...m, birthday: '', avatar: '', jobHistory: [] })); }
+// Données existantes : ajouter métier et pastilles aux membres qui n'en ont pas encore
+for (const d of DEFAULT_MEMBERS) { const m = db.get('members', d.id); if (m && m.job === undefined) db.update('members', d.id, { job: d.job, skills: d.skills, jobHistory: [] }); }
+const SKILL_DOMAINS = ['sante', 'info', 'emploi', 'rh', 'autre'];
 const member = (mid) => db.get('members', mid);
-const publicMember = (m) => m && { id: m.id, name: m.name, role: m.role, admin: !!m.admin, color: m.color, emoji: m.emoji, avatar: m.avatar, birthday: m.birthday };
+const publicMember = (m) => m && { id: m.id, name: m.name, role: m.role, admin: !!m.admin, color: m.color, emoji: m.emoji, avatar: m.avatar, birthday: m.birthday, job: m.job || '', skills: m.skills || [], jobHistory: m.jobHistory || [] };
 
 // ---------------------------------------------------------------- sessions
 const sessions = db.obj('sessions'); // token -> session
@@ -197,6 +210,13 @@ route('PATCH', '/api/members/:id', async (req, res, s, p) => {
   const b = await readJson(req); const patch = {};
   for (const k of ['name', 'color', 'emoji', 'avatar', 'birthday']) if (k in b) patch[k] = clip(b[k], 200);
   if (s.member.admin && b.role && ['author', 'reader'].includes(b.role)) patch.role = b.role;
+  const cur = member(p.id);
+  if ('job' in b && clip(b.job, 80) !== (cur?.job || '')) {
+    // Historique des métiers : on garde la trace des changements
+    patch.job = clip(b.job, 80);
+    if (cur?.job) patch.jobHistory = [...(cur.jobHistory || []), { job: cur.job, until: new Date().toISOString().slice(0, 10) }].slice(-20);
+  }
+  if (Array.isArray(b.skills)) patch.skills = b.skills.slice(0, 12).map((x) => ({ label: clip(x.label, 40).trim(), domain: SKILL_DOMAINS.includes(x.domain) ? x.domain : 'autre' })).filter((x) => x.label);
   const m = db.update('members', p.id, patch);
   event('members', db.list('members').map(publicMember));
   ok(res, publicMember(m));
@@ -207,9 +227,24 @@ route('POST', '/api/members', async (req, res, s) => {
   const name = clip(b.name, 40).trim(); if (!name) return fail(res, 400, 'Prénom requis');
   const mid = name.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '') || db.id();
   if (member(mid)) return fail(res, 409, 'Ce membre existe déjà');
-  const m = db.insert('members', { id: mid, name, role: 'reader', admin: false, color: clip(b.color || '#a78bfa', 20), emoji: clip(b.emoji || '🙂', 8), avatar: '', birthday: '' });
+  const m = db.insert('members', { id: mid, name, role: 'reader', admin: false, color: clip(b.color || '#a78bfa', 20), emoji: clip(b.emoji || '🙂', 8), avatar: '', birthday: '', job: '', skills: [], jobHistory: [] });
   event('members', db.list('members').map(publicMember));
   ok(res, publicMember(m));
+});
+
+// Réglages familiaux (photos de l'accueil, fond) et serveurs BLC TV
+route('GET', '/api/family', async (req, res) => { const f = db.obj('family'); ok(res, { heroPhotos: f.heroPhotos || [], background: f.background || '', tvServers: TV_SERVERS.map((x, i) => ({ id: i, name: x.name })) }); });
+route('PUT', '/api/family', async (req, res, s) => {
+  if (!s.member?.admin) return fail(res, 403, 'Réservé aux administrateurs');
+  const b = await readJson(req); const f = db.obj('family');
+  const okUrl = (u) => /^\/media\/[\w-]+\.\w+$/.test(u);
+  if (Array.isArray(b.heroPhotos)) f.heroPhotos = b.heroPhotos.filter(okUrl).slice(0, 5);
+  if ('background' in b) f.background = okUrl(b.background || '') ? b.background : '';
+  db.save('family'); event('family', null); ok(res, f);
+});
+route('GET', '/api/tv/go/:i', async (req, res, s, p) => {
+  const srv = TV_SERVERS[Number(p.i)]; if (!srv) return fail(res, 404, 'Serveur inconnu');
+  res.writeHead(302, { Location: srv.url, 'Cache-Control': 'no-store' }); res.end();
 });
 
 // Appareils

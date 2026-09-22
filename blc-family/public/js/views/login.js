@@ -7,7 +7,7 @@ export default function login(root, { onDone }) {
   const err = h('p', { style: { color: 'var(--danger)', minHeight: '24px' } });
   const pin = h('input.pin', { type: 'password', inputmode: 'numeric', autocomplete: 'current-password', placeholder: '••••', 'aria-label': 'Code famille' });
   const who = h('div.who-grid', state.members.map((m) => {
-    const b = h('button', { type: 'button', onclick: () => { chosen = m.id; [...who.children].forEach((x) => x.classList.toggle('on', x === b)); pin.focus(); } }, avatar(m.id, 'xl'), h('b', m.name));
+    const b = h('button', { type: 'button', onclick: () => { chosen = m.id; [...who.children].forEach((x) => x.classList.toggle('on', x === b)); pin.focus(); } }, avatar(m.id, 'xl'), h('b', m.name), m.job ? h('small.muted', { style: { fontSize: '12px' } }, m.job) : null);
     return b;
   }));
   const names = { phone: 'Téléphone', tablet: 'Tablette', desktop: 'Ordinateur', tv: 'Télévision' };

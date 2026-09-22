@@ -44,6 +44,19 @@ Tous les appareils de la famille communiquent entre eux en temps réel.
 - **Regarder ensemble** pendant un appel : photo, vidéo (lecture/pause/position synchronisées) ou Apéro Time.
 - **Notre semaine** : regroupement automatique par semaine, réordonnable, éléments retirables, diaporama, « Conserver ».
 
+## Accueil, entraide et BLC TV
+
+- **Accueil** conforme à la maquette : logo manuscrit néon « Belcram Family », collage de polaroïds « Notre famille »
+  (photos choisies dans ⚙️ Paramètres → Personnaliser l'accueil, sinon dernières photos de la galerie, sinon paysages
+  dessinés en code), heure, météo de la Guadeloupe (Open-Meteo), « Bonjour … ♡ », 7 grandes cartes illustrées
+  (ApéroTime, BLC TV Player, BLC Music Player, Galerie, Appels vidéo, Notre Famille, Paramètres), raccourcis
+  Calendrier / Météo / Interphone / Discussion / Aide et « Moment du jour ». Décor coucher de soleil codé en SVG,
+  remplaçable par une photo de fond.
+- **Notre Famille / Entraide** : métier et **pastilles de compétences** de chacun (santé, informatique, emploi, RH…),
+  champ « J'ai besoin d'aide pour… » qui indique vers qui se tourner, boutons Demander / Appeler. Historique des métiers.
+- **BLC TV Player** : la carte propose le choix du serveur puis redirige automatiquement. Les liens sont définis sur le
+  serveur dans `.env`, jamais dans le dépôt : `TV_SERVERS="Fox|https://…;BOD TV 4K|https://…"`.
+
 ## Architecture
 
 ```
