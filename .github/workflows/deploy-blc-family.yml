@@ -1,0 +1,89 @@
+# Déploiement de Belcram Family sur le VPS (lancé à la main depuis l'onglet Actions ou par Claude).
+# Secrets à créer une fois dans GitHub → Settings → Secrets and variables → Actions :
+#   VPS_HOST      adresse du serveur (ex. 187.124.27.19)
+#   VPS_USER      utilisateur SSH (ex. root)
+#   VPS_SSH_KEY   clé privée SSH autorisée sur le serveur
+#   FAMILY_PIN    code famille (utilisé seulement si le fichier .env n'existe pas encore)
+# Optionnel : TV_SERVERS (ex. "Fox|https://…;BOD TV 4K|https://…"), CERTBOT_EMAIL
+name: Déployer Belcram Family
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/bellegramme-family-ecosystem-za6p00]
+    paths: ['blc-family/**', '.github/workflows/deploy-blc-family.yml']
+
+concurrency: deploy-blc-family
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier les accès au serveur
+        id: check
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          if [ -n "$VPS_SSH_KEY" ] && [ -n "$VPS_HOST" ] && [ -n "$VPS_USER" ]; then echo "ready=true" >> "$GITHUB_OUTPUT";
+          else echo "::notice::Secrets VPS_HOST / VPS_USER / VPS_SSH_KEY pas encore créés : déploiement ignoré."; fi
+
+      - name: Préparer la clé SSH
+        if: steps.check.outputs.ready == 'true'
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Envoyer l'application (les données du serveur ne sont jamais touchées)
+        if: steps.check.outputs.ready == 'true'
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh -i ~/.ssh/id_deploy "$VPS_USER@$VPS_HOST" 'mkdir -p /var/www/blc-family'
+          rsync -az --delete --exclude data --exclude node_modules --exclude .env \
+            -e "ssh -i $HOME/.ssh/id_deploy" blc-family/ "$VPS_USER@$VPS_HOST:/var/www/blc-family/"
+
+      - name: Installer et redémarrer
+        if: steps.check.outputs.ready == 'true'
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          FAMILY_PIN: ${{ secrets.FAMILY_PIN }}
+          TV_SERVERS: ${{ secrets.TV_SERVERS }}
+          CERTBOT_EMAIL: ${{ secrets.CERTBOT_EMAIL }}
+        run: |
+          ssh -i ~/.ssh/id_deploy "$VPS_USER@$VPS_HOST" \
+            "FAMILY_PIN=$(printf %q "$FAMILY_PIN") TV_SERVERS=$(printf %q "$TV_SERVERS") CERTBOT_EMAIL=$(printf %q "$CERTBOT_EMAIL") bash -s" <<'REMOTE'
+          set -e
+          cd /var/www/blc-family
+          command -v node >/dev/null || { curl -fsSL https://deb.nodesource.com/setup_20.x | bash -; apt-get install -y nodejs; }
+          command -v pm2 >/dev/null || npm install -g pm2
+          command -v nginx >/dev/null || apt-get install -y nginx
+          npm ci --omit=dev
+          if [ ! -f .env ]; then
+            test -n "$FAMILY_PIN" || { echo "FAMILY_PIN manquant pour créer .env"; exit 1; }
+            printf 'PORT=3100\nFAMILY_PIN=%s\nCOOKIE_DOMAIN=.blctv-player.com\nMUSIC_URL=https://blc-music-player.duckdns.org/app\nTV_URL=https://blctv-player.com\n' "$FAMILY_PIN" > .env
+            chmod 600 .env
+          fi
+          if [ -n "$TV_SERVERS" ]; then grep -v '^TV_SERVERS=' .env > .env.tmp || true; printf 'TV_SERVERS="%s"\n' "$TV_SERVERS" >> .env.tmp; mv .env.tmp .env; chmod 600 .env; fi
+          pm2 describe blc-family >/dev/null 2>&1 && pm2 delete blc-family
+          pm2 start server/index.js --name blc-family --node-args="--env-file=/var/www/blc-family/.env"
+          pm2 save
+          cp deploy/nginx-blc-family.conf /etc/nginx/sites-available/blc-family
+          ln -sf /etc/nginx/sites-available/blc-family /etc/nginx/sites-enabled/blc-family
+          nginx -t && systemctl reload nginx
+          if [ ! -d /etc/letsencrypt/live/family.blctv-player.com ] && command -v certbot >/dev/null; then
+            certbot --nginx --non-interactive --agree-tos --redirect -m "${CERTBOT_EMAIL:-admin@blctv-player.com}" \
+              -d family.blctv-player.com -d galerie.blctv-player.com -d chat.blctv-player.com -d visio.blctv-player.com \
+              || echo "⚠️ HTTPS : vérifiez que les 4 sous-domaines pointent vers le serveur"
+          fi
+          sleep 2; curl -fsS -o /dev/null http://127.0.0.1:3100/api/config && echo "✅ Belcram Family répond"
+          REMOTE
