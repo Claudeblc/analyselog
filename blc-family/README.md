@@ -1,4 +1,4 @@
-# BLC Family — la maison numérique de la famille Belcram
+# Belcram Family — la maison numérique de la famille Belcram
 
 Plateforme familiale privée et **multi-écrans** (téléphone, tablette, ordinateur, TV horizontale ou verticale).
 Tous les appareils de la famille communiquent entre eux en temps réel.

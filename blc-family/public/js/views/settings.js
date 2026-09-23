@@ -80,7 +80,7 @@ export default async function settings(root) {
     devices.sort((a, b) => b.lastSeen - a.lastSeen).map((d) => h('div.dev-row', h('span.ic', kindIcon[d.kind] || '💻'),
       h('div.grow', h('b', d.name), h('div.muted', d.online ? '🟢 en ligne' : 'vu ' + ago(d.lastSeen), d.memberId ? ` · ${member(d.memberId).name}` : ' · appareil familial')),
       d.id !== state.device.id && me && (me.admin || d.memberId === me.id || !d.memberId) ? h('button.btn.small.danger', { onclick: async () => { if (await confirmBox(`Retirer « ${d.name} » ?`, 'Retirer')) { await api('/api/devices/' + d.id, { method: 'DELETE' }); location.reload(); } } }, 'Retirer') : null)),
-    h('p.muted', { style: { marginTop: '14px' } }, '📺 Connecter une TV : ouvrez BLC Family sur la TV en ajoutant « ?tv=1 » à l’adresse (ou « ?tv=vertical » pour une TV verticale), puis scannez le QR code avec votre téléphone.'));
+    h('p.muted', { style: { marginTop: '14px' } }, '📺 Connecter une TV : ouvrez Belcram Family sur la TV en ajoutant « ?tv=1 » à l’adresse (ou « ?tv=vertical » pour une TV verticale), puis scannez le QR code avec votre téléphone.'));
 
   root.append(h('h1.page-title', '⚙️ Paramètres'), h('div.settings-grid', profile, custom, thisDevice, family, devList,
     h('div.glass.card', h('h2', 'Applications'), h('p', h('a', { href: state.links.music, target: '_blank', rel: 'noopener' }, '🎵 BLC Music Player')), h('p', h('a', { href: state.links.tv, target: '_blank', rel: 'noopener' }, '📺 BLC TV Player')),

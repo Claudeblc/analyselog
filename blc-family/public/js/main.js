@@ -1,4 +1,4 @@
-// BLC Family — démarrage, routage, couche globale (notifications, TV, interphone, appels).
+// Belcram Family — démarrage, routage, couche globale (notifications, TV, interphone, appels).
 import { state, api, h, $, $$, bus, toast, avatar, member, overlay, audioPlayer, confetti, kindIcon, info } from './core.js';
 import * as rt from './rt.js';
 

@@ -7,7 +7,7 @@ export async function openFrame() {
   if (current) return;
   let items = [];
   try { items = await api('/api/frame'); } catch (_) { return; }
-  if (!items.length) items = [{ type: 'title', title: 'BLC Family', sub: 'La maison numérique de la famille Belcram' }];
+  if (!items.length) items = [{ type: 'title', title: 'Belcram Family', sub: 'La maison numérique de la famille Belcram' }];
   current = slideshow(items, { title: 'clock', ms: 9000, onClose: () => { current = null; } });
   const wake = () => { removeEventListener('pointerdown', wake); current?.close(); };
   setTimeout(() => addEventListener('pointerdown', wake), 500);

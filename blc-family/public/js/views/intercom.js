@@ -20,7 +20,7 @@ export default function intercom(root) {
     for (const id of [...chosen]) if (!list.some((d) => d.deviceId === id)) chosen.delete(id);
     if (!chosen.size) list.filter((d) => d.kind === 'tv').forEach((d) => chosen.add(d.deviceId));
     targets.replaceChildren(...(list.length ? list.map((d) => h('button.target' + (chosen.has(d.deviceId) ? '.on' : ''), { onclick: () => { chosen.has(d.deviceId) ? chosen.delete(d.deviceId) : chosen.add(d.deviceId); paint(); } },
-      h('span.ic', kindIcon[d.kind] || '💻'), h('b', d.deviceName), d.memberId ? h('span.muted', member(d.memberId).name) : h('span.muted', 'Appareil familial'))) : [h('p.muted', 'Aucun autre appareil allumé. Allumez la TV (BLC Family) pour lui parler.')]));
+      h('span.ic', kindIcon[d.kind] || '💻'), h('b', d.deviceName), d.memberId ? h('span.muted', member(d.memberId).name) : h('span.muted', 'Appareil familial'))) : [h('p.muted', 'Aucun autre appareil allumé. Allumez la TV (Belcram Family) pour lui parler.')]));
   }
   async function start() {
     if (rec) return;

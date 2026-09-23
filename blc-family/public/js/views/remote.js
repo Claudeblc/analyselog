@@ -17,7 +17,7 @@ export default async function remote(root) {
     box.replaceChildren(
       h('h1.page-title', '🎮 Télécommande'),
       list.length ? h('div.chips', { style: { justifyContent: 'center' } }, list.map((t) => h('button.chip' + (t.deviceId === target ? '.on' : ''), { onclick: () => { target = t.deviceId; localStorage.setItem('blcf.remoteTarget', target); paint(); } }, '📺 ', t.deviceName)))
-        : h('div.glass.card', h('p', 'Aucune télévision connectée n’est allumée.'), h('p.muted', 'Sur la TV, ouvrez BLC Family avec « ?tv=1 » à la fin de l’adresse puis scannez le QR code affiché avec ce téléphone.')),
+        : h('div.glass.card', h('p', 'Aucune télévision connectée n’est allumée.'), h('p.muted', 'Sur la TV, ouvrez Belcram Family avec « ?tv=1 » à la fin de l’adresse puis scannez le QR code affiché avec ce téléphone.')),
       h('div.dpad', h('span'), k('up', '▲'), h('span'), k('left', '◀'), k('ok', 'OK', '.ok'), k('right', '▶'), h('span'), k('down', '▼'), h('span')),
       h('div.row', { style: { justifyContent: 'center' } }, k('back', '↩ Retour', '.btn'), k('home', '🏠 Accueil', '.btn'), k('playpause', '⏯ Lecture', '.btn')),
       h('h2.section-title', { style: { justifyContent: 'center' } }, 'Afficher sur la TV'),

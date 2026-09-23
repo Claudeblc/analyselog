@@ -21,7 +21,7 @@ export default function login(root, { onDone }) {
   };
   root.append(h('div.login', h('form.box', { onsubmit: submit },
     h('img', { src: '/img/icon.svg', alt: '', style: { width: '84px', margin: '0 auto' } }),
-    h('h1', 'BLC Family'), h('p.muted', 'La maison numérique de la famille Belcram'),
+    h('h1', 'Belcram Family'), h('p.muted', 'La maison numérique de la famille Belcram'),
     h('h3', 'Qui êtes-vous ?'), who,
     pin, err,
     h('button.btn.primary', { type: 'submit', style: { minWidth: '220px' } }, 'Entrer dans la maison'),

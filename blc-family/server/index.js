@@ -1,5 +1,5 @@
 'use strict';
-// BLC Family — serveur HTTP + WebSocket (temps réel, signalisation WebRTC).
+// Belcram Family — serveur HTTP + WebSocket (temps réel, signalisation WebRTC).
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -182,7 +182,7 @@ function route(method, pattern, handler, opts = {}) {
   routes.push({ method, re, keys, handler, opts });
 }
 
-route('GET', '/api/config', async (req, res) => ok(res, { appName: 'BLC Family', members: db.list('members').map(publicMember), links: LINKS }), { public: true });
+route('GET', '/api/config', async (req, res) => ok(res, { appName: 'Belcram Family', members: db.list('members').map(publicMember), links: LINKS }), { public: true });
 
 route('POST', '/api/login', async (req, res) => {
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
@@ -306,7 +306,7 @@ route('POST', '/api/pair/claim', async (req, res) => {
   pairings.delete(b.token); // usage unique
   const t = createSession({ memberId: null, pairedBy: pr.approvedBy, deviceName: pr.deviceName, kind: pr.kind });
   setCookie(req, res, t);
-  notify(pr.approvedBy, `a connecté « ${pr.deviceName} » à BLC Family`, null);
+  notify(pr.approvedBy, `a connecté « ${pr.deviceName} » à Belcram Family`, null);
   ok(res, { status: 'approved' });
 }, { public: true });
 

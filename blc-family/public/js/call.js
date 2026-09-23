@@ -154,7 +154,7 @@ function phoneQr() {
 }
 function phoneAsCamera() {
   const url = `${location.origin}/#/cam/${encodeURIComponent(call.room)}/${state.device.id}`;
-  sheet('📱 Téléphone = caméra + micro', () => h('div', { style: { textAlign: 'center' } }, h('p', 'Scannez ce code avec un téléphone connecté à BLC Family. Il deviendra la caméra et le micro de cet écran.'),
+  sheet('📱 Téléphone = caméra + micro', () => h('div', { style: { textAlign: 'center' } }, h('p', 'Scannez ce code avec un téléphone connecté à Belcram Family. Il deviendra la caméra et le micro de cet écran.'),
     h('div.qr-box', h('img', { src: '/api/qr?text=' + encodeURIComponent(url), alt: '' })), h('p.muted', 'Posez ensuite le téléphone face à la famille.')));
 }
 export function minimize() { if (!call?.el) return; call.el.classList.add('mini'); paint(); }

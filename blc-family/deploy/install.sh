@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installation / mise à jour de BLC Family sur le VPS (Ubuntu/Debian, root).
+# Installation / mise à jour de Belcram Family sur le VPS (Ubuntu/Debian, root).
 # Usage : sudo bash deploy/install.sh   (depuis le dossier blc-family)
 # Pré-requis DNS : enregistrements A de family / galerie / chat / visio .blctv-player.com vers l'IP du VPS.
 set -euo pipefail
@@ -47,4 +47,4 @@ nginx -t && systemctl reload nginx
 
 ARGS=(); for d in "${DOMAINS[@]}"; do ARGS+=(-d "$d"); done
 certbot --nginx --non-interactive --agree-tos --redirect -m "${CERTBOT_EMAIL:-admin@blctv-player.com}" "${ARGS[@]}" || echo "⚠️ certbot : vérifiez les DNS puis relancez certbot --nginx ${ARGS[*]}"
-echo "✅ BLC Family : https://${DOMAINS[0]}"
+echo "✅ Belcram Family : https://${DOMAINS[0]}"

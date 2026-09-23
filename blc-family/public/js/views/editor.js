@@ -130,7 +130,7 @@ export default async function editor(root, { id }) {
     actions,
     h('div.editor', { style: { marginTop: '16px' } },
       h('div', h('div.field', title), h('div.field', h('label', 'Date de l’Apéro Time'), date), h('div.field', body),
-        h('p.muted', { style: { fontSize: '13px' } }, 'Astuce WhatsApp : *gras*, _italique_, ~barré~. Les liens YouTube deviennent des lecteurs dans BLC Family.'),
+        h('p.muted', { style: { fontSize: '13px' } }, 'Astuce WhatsApp : *gras*, _italique_, ~barré~. Les liens YouTube deviennent des lecteurs dans Belcram Family.'),
         h('div.glass.card', h('h3', { style: { marginTop: 0 } }, '✍️ Annotations de vos enfants'), annBox)),
       h('div', tabs, preview)));
   paintStatus(); paintTabs(); paintPreview();
